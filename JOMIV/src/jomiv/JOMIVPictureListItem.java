@@ -9,8 +9,11 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 public class JOMIVPictureListItem extends JPanel {
 
@@ -48,6 +51,9 @@ public class JOMIVPictureListItem extends JPanel {
 		JCheckBox jcb = new JCheckBox();
 		jcb.setText(this.filePath);
 		jcb.setSelected(true);
+		jcb.setToolTipText("Checking this box means that this picture"
+				+ " will be backed up if you choose \"Zip Up Photos\""
+				+ " from the menu above.");
 		return jcb;
 	}
 	
@@ -63,14 +69,23 @@ public class JOMIVPictureListItem extends JPanel {
 				//Create imageIcon only if the user wants to view it; do
 				//not store an ImageIcon as an instance variable.
 				
-				ImageIcon imageIcon = null;
+				ImageIcon imageIcon = null; //To show the picture
+				JLabel jl = null; //To hold the ImageIcon
+				JScrollPane jsp = null; //To hold the JLabel
 
 				try {
 					imageIcon = new ImageIcon(
 							JOMIVPictureListItem.this.filePath);
-					JOptionPane.showMessageDialog(null, "",
-							JOMIVPictureListItem.this.filePath,
-							JOptionPane.OK_OPTION, imageIcon);
+				
+					jl = new JLabel(imageIcon);
+					jsp = new JScrollPane(jl);
+					
+					JFrame imageBrowser = new JFrame();
+					imageBrowser.getContentPane().add(jsp);
+					imageBrowser.setTitle(JOMIVPictureListItem.this.filePath);
+					imageBrowser.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+					imageBrowser.pack();
+					imageBrowser.setVisible(true);
 				} catch (Exception ex) {
 					JOptionPane.showMessageDialog(null,
 							"Sorry! Due to a rendering error, we"

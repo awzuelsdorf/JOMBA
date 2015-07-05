@@ -8,6 +8,7 @@ import java.util.LinkedList;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
@@ -35,14 +36,27 @@ public class JOMIVViewer {
 		
 		LinkedList<String> fileNames = new LinkedList<String>();
 
+		//Create JFrame and put some little "Loading, please wait."
+		//message on it. This message will be replaced with
+		//important stuff later on.
+		JFrame imageViewer = new JFrame();
+		JPanel jp = new JPanel();
+		jp.add(new JLabel("Finding your pictures. This may take a"
+				+ " few minutes. Please be patient."));
+		imageViewer.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		imageViewer.setTitle("Just One More Image Viewer (JOMIV)");
+		imageViewer.getContentPane().add(jp);
+		imageViewer.setVisible(true);
+		imageViewer.pack();
+
 		//Determine underlying OS type.
-		//This part assumes that only POSIX-type, Mac, and Windows
-		//OSes are used in the world.
+		//This part assumes that Windows, Mac, and
+		//various Linux distros are the only OSes that are used in the world.
 		String osName = System.getProperty("os.name").toLowerCase();
 		
 		boolean isWindows = osName.startsWith("windows");
 		boolean isMac = osName.startsWith("apple");
-		boolean isPOSIX = osName.startsWith("linux") ||
+		boolean isLinux = osName.startsWith("linux") ||
 				(isWindows == false && isMac == false);
 		
 		while (rootDirs.hasNext()) {
@@ -51,21 +65,21 @@ public class JOMIVViewer {
 			if (isWindows) {
 				rootDirectoryValue += "Users";
 			}
-			else if (isPOSIX) {
+			else if (isLinux) {
 				rootDirectoryValue += "home";
 			}
 			else if (isMac) {
-				throw new RuntimeException("Case of Mac not implemented!!!");
+				System.err.println("Case of Mac not implemented!!!");
+				System.exit(-1);
 			}
 			else {}
 			
-			//System.out.println("Root Directory value: " + rootDirectoryValue);
 			getAllImageFiles(new File(rootDirectoryValue), fileNames);
 		}
 
-		JFrame imageViewer = new JFrame();
-
-		JPanel jp = new JPanel();
+		imageViewer.getContentPane().remove(jp);
+		
+		jp = new JPanel();
 		
 		jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 
@@ -75,13 +89,7 @@ public class JOMIVViewer {
 
 		JScrollPane jsp = new JScrollPane(jp);
 
-		imageViewer.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-		imageViewer.setTitle("Just One More Image Viewer");
-
 		imageViewer.getContentPane().add(jsp);
-
-		imageViewer.setVisible(true);
 
 		imageViewer.pack();
 		
@@ -116,21 +124,14 @@ public class JOMIVViewer {
 					JOMIVPicture.hasImageFileExtension(
 							currentFile.getAbsolutePath())) {
 				fileNames.add(currentFile.getAbsolutePath());
-
-				System.out.println(currentFile.getAbsolutePath());
-			}
-			else if (currentFile.isFile() == false) {
-				System.err.println("Encountered entity that is neither "
-						+ "directory nor file. Absolute pathname is " + 
-						currentFile.getAbsolutePath());
 			}
 			else {
-				//We encountered a non-image file. Do nothing.
+				//We encountered a non-image file or a file that we
+				//cannot process. Do nothing.
 			}
 		}
 		else {
-			System.err.println("Could not read file \"" +
-					currentFile.getAbsolutePath() + "\"");
+			//We could not read this file. Do nothing.
 		}
 	}
 
