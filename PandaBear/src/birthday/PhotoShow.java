@@ -1,19 +1,19 @@
-/*	This file is part of PhotoShow.
+/*	This file is part of JOMIV.
 
 	Copyright 2015 Andrew Zuelsdorf. Licensed under GNU GPL
 
-    PhotoShow is free software: you can redistribute it and/or modify
+    JOMIV is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    PhotoShow is distributed in the hope that it will be useful,
+    JOMIV is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with PhotoShow.  If not, see <http://www.gnu.org/licenses/>.
+    along with JOMIV.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package birthday;
@@ -30,9 +30,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class PhotoShow extends JFrame {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 4700348374006729144L;
 
 	private String photoFolderPath, separator;
@@ -63,7 +60,7 @@ public class PhotoShow extends JFrame {
 				photoFolderPath = jfc.getSelectedFile().getAbsolutePath();
 			}
 			else {
-				JOptionPane.showMessageDialog(null, "Sorry, you need to select a DIRECTORY of photos.");
+				JOptionPane.showMessageDialog(null, "Sorry, you need to select a folder.");
 				photoFolderPath = null;
 			}
 		} while (photoFolderPath == null);
