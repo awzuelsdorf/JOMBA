@@ -1,6 +1,8 @@
 package jomiv;
 
 import java.awt.Component;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
@@ -80,11 +82,20 @@ public class JOMIVPictureListItem extends JPanel {
 					jl = new JLabel(imageIcon);
 					jsp = new JScrollPane(jl);
 					
+					//Create window to show picture in.
 					JFrame imageBrowser = new JFrame();
 					imageBrowser.getContentPane().add(jsp);
 					imageBrowser.setTitle(JOMIVPictureListItem.this.filePath);
 					imageBrowser.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-					imageBrowser.pack();
+					
+					//Do not pack or else bottom scroll bar will be hidden
+					//by task bar on Windows 8.1. Instead, arbitrarily set to 1/4 area of screen.
+					GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+					int width = gd.getDisplayMode().getWidth() / 2;
+					int height = gd.getDisplayMode().getHeight() / 2;
+					imageBrowser.setSize(width, height);
+					
+					//imageBrowser.pack();
 					imageBrowser.setVisible(true);
 				} catch (Exception ex) {
 					JOptionPane.showMessageDialog(null,

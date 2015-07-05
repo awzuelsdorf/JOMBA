@@ -1,5 +1,7 @@
 package jomiv;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -46,8 +48,8 @@ public class JOMIVViewer {
 		imageViewer.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		imageViewer.setTitle("Just One More Image Viewer (JOMIV)");
 		imageViewer.getContentPane().add(jp);
-		imageViewer.setVisible(true);
 		imageViewer.pack();
+		imageViewer.setVisible(true);
 
 		//Determine underlying OS type.
 		//This part assumes that Windows, Mac, and
@@ -77,10 +79,11 @@ public class JOMIVViewer {
 			getAllImageFiles(new File(rootDirectoryValue), fileNames);
 		}
 
+		//Get rid of "Please be patient" message.
 		imageViewer.getContentPane().remove(jp);
-		
 		jp = new JPanel();
 		
+		//Add Picture List
 		jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 
 		for (String fileName : fileNames) {
@@ -88,11 +91,16 @@ public class JOMIVViewer {
 		}
 
 		JScrollPane jsp = new JScrollPane(jp);
-
 		imageViewer.getContentPane().add(jsp);
-
-		imageViewer.pack();
+		//imageViewer.pack();
+	
+		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		int width = gd.getDisplayMode().getWidth() / 2;
+		int height = gd.getDisplayMode().getHeight() / 2;
+		imageViewer.setSize(width, height);
 		
+		//Return number of images this computer had in
+		//this user's directory.
 		return fileNames.size();
 	}
 
