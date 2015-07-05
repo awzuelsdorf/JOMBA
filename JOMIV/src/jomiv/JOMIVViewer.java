@@ -42,7 +42,8 @@ public class JOMIVViewer {
 		
 		boolean isWindows = osName.startsWith("windows");
 		boolean isMac = osName.startsWith("apple");
-		boolean isPOSIX = osName.startsWith("posix");
+		boolean isPOSIX = osName.startsWith("linux") ||
+				(isWindows == false && isMac == false);
 		
 		while (rootDirs.hasNext()) {
 			rootDirectoryValue = rootDirs.next().toString();
