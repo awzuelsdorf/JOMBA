@@ -93,9 +93,9 @@ public class JOMIVPictureListItem extends JPanel {
 					GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 					int width = gd.getDisplayMode().getWidth() / 2;
 					int height = gd.getDisplayMode().getHeight() / 2;
-					imageBrowser.setSize(width, height);
 					
-					//imageBrowser.pack();
+					imageBrowser.pack();
+					imageBrowser.setSize(width, height);
 					imageBrowser.setVisible(true);
 				} catch (Exception ex) {
 					JOptionPane.showMessageDialog(null,

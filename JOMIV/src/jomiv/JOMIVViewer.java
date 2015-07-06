@@ -2,22 +2,33 @@ package jomiv;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 public class JOMIVViewer {
 
+	private LinkedList<String> fileNames;
+	
 	public JOMIVViewer() {
-
+		fileNames = null;
 	}
 
 	public void viewRootDirs() {
@@ -36,12 +47,48 @@ public class JOMIVViewer {
 
 		String rootDirectoryValue = null;
 		
-		LinkedList<String> fileNames = new LinkedList<String>();
+		this.fileNames = new LinkedList<String>();
 
-		//Create JFrame and put some little "Loading, please wait."
-		//message on it. This message will be replaced with
-		//important stuff later on.
+		//Create JFrame and put some. 
 		JFrame imageViewer = new JFrame();
+		
+		//Create a file menu and put it at the top of the JFrame.
+		JMenuBar jmb = new JMenuBar();
+		JMenu jmFileMenu = new JMenu("File");
+		
+		//The obligatory exit button that almost no one over the age of
+		//ten has used since 1997
+		JMenuItem jmiExitOption = new JMenuItem("Exit");
+		jmiExitOption.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean confirmed = JOptionPane.YES_OPTION ==
+						JOptionPane.showConfirmDialog(null,
+						"Are you sure you want to quit?");
+				
+				if (confirmed) {
+					imageViewer.dispose();
+				}
+			}
+		});
+		jmFileMenu.add(jmiExitOption);
+		
+		//Option to zip up files.
+		JMenuItem jmiTarUp = new JMenuItem("Tar up files");
+		
+		jmiTarUp.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				zipUpFiles();
+			}
+		});
+		
+		jmb.add(jmFileMenu);
+		imageViewer.setJMenuBar(jmb);
+		
+		//Put some little "Loading, please wait."
+		//message in JFrame. This message will be replaced with
+		//important stuff later on.
 		JPanel jp = new JPanel();
 		jp.add(new JLabel("Finding your pictures. This may take a"
 				+ " few minutes. Please be patient."));
@@ -78,7 +125,7 @@ public class JOMIVViewer {
 			
 			getAllImageFiles(new File(rootDirectoryValue), fileNames);
 		}
-
+		
 		//Get rid of "Please be patient" message.
 		imageViewer.getContentPane().remove(jp);
 		jp = new JPanel();
@@ -92,8 +139,6 @@ public class JOMIVViewer {
 
 		JScrollPane jsp = new JScrollPane(jp);
 		imageViewer.getContentPane().add(jsp);
-		//imageViewer.pack();
-	
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		int width = gd.getDisplayMode().getWidth() / 2;
 		int height = gd.getDisplayMode().getHeight() / 2;
@@ -104,6 +149,24 @@ public class JOMIVViewer {
 		return fileNames.size();
 	}
 
+	public void zipUpFiles() {
+		try {
+			// Encode a String into bytes
+		     String inputString = "blahblahblah";
+		     byte[] input = inputString.getBytes("UTF-8");
+
+		     // Compress the bytes
+		     byte[] output = new byte[100];
+		     Deflater compresser = new Deflater();
+		     compresser.setInput(input);
+		     compresser.finish();
+		     int compressedDataLength = compresser.deflate(output);
+		     compresser.end();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void getAllImageFiles(File currentFile,
 	LinkedList<String> fileNames) {
 	
