@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -13,6 +14,30 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipFileCreator {
 	private static final int END_OF_FILE = -1;
+	private static final int BYTE_SIZE = 8;
+	private static final int DEFAULT_BUFFER_SIZE_IN_BYTES = 1024;
+	
+	private LinkedList<String> filePathsList;
+	private String zipFilePath;
+	private int bufferSizeInBytes;
+
+	public ZipFileCreator(List<String> filePaths, String zipFilePath, int bufferSizeInBytes) {
+		if (filePaths == null) {
+			throw new IllegalArgumentException("fileNames cannot be null!");
+		}
+		if (zipFilePath == null) {
+			throw new IllegalArgumentException("zip file name cannot be null!");
+		}
+		
+		this.zipFilePath = zipFilePath;
+		this.filePathsList = new LinkedList<String>();
+		this.filePathsList.addAll(filePaths);
+		this.setBufferSizeInBytes(bufferSizeInBytes);
+	}
+	
+	public ZipFileCreator(List<String> filePaths, String zipFilePath) {
+		this(filePaths, zipFilePath, DEFAULT_BUFFER_SIZE_IN_BYTES);
+	}
 	
 	/**
 	 * Caller provides a buffer and a FileInputStream object.
@@ -22,7 +47,7 @@ public class ZipFileCreator {
 	 * to read. END_OF_FILE otherwise. NOTE: It is the caller's responsibility
 	 * to close fis, not the callee.
 	 */
-	public static int readFileIntoBuffer(byte buffer[], int offset,
+	protected int readFileIntoBuffer(byte buffer[], int offset,
 			FileInputStream fis) {
 		if (fis == null || buffer == null) {
 			return END_OF_FILE;
@@ -50,7 +75,8 @@ public class ZipFileCreator {
 	 * @return boolean indicating whether the file at filePath is now an
 	 * entry in our zipfile.
 	 */
-	public static boolean writeFileIntoZipOutputStream(String filePath, ZipOutputStream zos, int bufferLength) {
+	protected boolean writeFileIntoZipOutputStream(String filePath,
+			ZipOutputStream zos, int bufferLength) {
 		boolean succeeded = false; //Right now, we have not succeeded in
 		//putting our entry into our zipfile.
 		
@@ -77,7 +103,6 @@ public class ZipFileCreator {
 		//Put new entry (the file to be written) into zipfile.
 		try {
 			zos.putNextEntry(new ZipEntry(new File(filePath).getName()));
-			
 		} catch (ZipException e2) {
 			//Failed to put new entry into zipfile (Probably because of a
 			//duplicate entry). Return true after
@@ -144,6 +169,24 @@ public class ZipFileCreator {
 		return true;
 	}
 	
+	public int getBufferSizeInBytes() {
+		return this.bufferSizeInBytes;
+	}
+	
+	public void setBufferSizeInBytes(int bufferSizeInBytes) {
+		if (bufferSizeInBytes <= 0) {
+			throw new IllegalArgumentException(String.format(
+			"Buffer size in bytes must be at least one, was %d\n",
+			bufferSizeInBytes));
+		}
+		
+		this.bufferSizeInBytes = bufferSizeInBytes;
+	}
+	
+	public int getBufferSizeInBits() {
+		return BYTE_SIZE * this.bufferSizeInBytes;
+	}
+	
 	/**
 	 * Takes in a list of file paths, the path to an output zipfile,
 	 * and writes the files to the zipfile.
@@ -151,7 +194,7 @@ public class ZipFileCreator {
 	 * @return LinkedList of file names of any files that could not be
 	 * written to zipfile.
 	 */
-	public static LinkedList<String> writeAllFilesIntoZipOutputStream(LinkedList<String> filePathsList, String zipFilePath) {
+	public LinkedList<String> writeAllFilesIntoZipOutputStream() {
 		LinkedList<String> failedFilesList = new LinkedList<String>();
 	
 		ZipOutputStream zos = null;
@@ -169,18 +212,20 @@ public class ZipFileCreator {
 			return failedFilesList;
 		}
 		
-		int bufferLength = 1024; //1kb buffer used to transfer data.
-		
 		ListIterator<String> fileIter = filePathsList.listIterator();
 	
+		String fileName = null;
+		
 		while (fileIter.hasNext()) {
-			if (!writeFileIntoZipOutputStream(fileIter.next(), zos, bufferLength)) {
-				failedFilesList.add(fileIter.previous());
-				System.out.printf("Failed on %s!\n", fileIter.next());
+			fileName = fileIter.next();
+			
+			System.out.printf("Processing %s\n", fileName);
+			if (!writeFileIntoZipOutputStream(fileName, zos, this.bufferSizeInBytes)) {
+				failedFilesList.add(fileName);
+				System.out.printf("Failed on %s!\n", fileName);
 			}
 			else {
-				System.out.printf("Succeeded on %s!\n", fileIter.previous());
-				fileIter.next(); //Essentially undo the previous() operation.
+				System.out.printf("Succeeded on %s!\n", fileName);
 			}
 		}
 		
@@ -196,49 +241,20 @@ public class ZipFileCreator {
 		return failedFilesList;
 	}
 	
-	/*public static void main(String args[]) throws IOException {
-		String filePath = "C:\\Users\\arizona16\\Downloads\\stinkbug.png";
-		String filePath2 = "C:\\Users\\arizona16\\Downloads\\superdevil.jpg";
-		String filePath3 = "C:\\Users\\arizona16\\Downloads\\ubuntu-15.04-desktop-amd64.iso";
-	
-		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(new File("C:\\Users\\arizona16\\Downloads\\test_zipfile_2.zip")));
-		
-		int bufferLength = 1024; //Completely arbitrary number of bytes.
-		
-		if (writeFileIntoZipOutputStream(filePath, zos, bufferLength)) {
-			System.out.printf("Success on %s!\n", filePath);
-		}
-		else {
-			System.out.printf("Failure on %s!\n", filePath);
-		}
-	
-		if (writeFileIntoZipOutputStream(filePath2, zos, bufferLength)) {
-			System.out.printf("Success on %s!\n", filePath2);
-		}
-		else {
-			System.out.printf("Failure on %s!\n", filePath2);
-		}
-	
-		if (writeFileIntoZipOutputStream(filePath3, zos, bufferLength)) {
-			System.out.printf("Success on %s!\n", filePath3);
-		}
-		else {
-			System.out.printf("Failure on %s!\n", filePath3);
-		}
-		
-		zos.close();
-	}*/
-	
 	public static void main(String args[]) {
 		LinkedList<String> filePathsList = new LinkedList<String>();
-		
+
 		filePathsList.add("C:\\Users\\arizona16\\Downloads\\ubuntu-15.04-desktop-amd64.iso");
 		filePathsList.add("C:\\Users\\arizona16\\Downloads\\stinkbug.png");
-		filePathsList.add("C:\\Users\\arizona16\\Music\\ubuntu-15.04-desktop-amd64.iso");
+		filePathsList.add("C:\\Users\\arizona16\\Music\\az-ubuntu-15.04-desktop-amd64.iso");
 		filePathsList.add("C:\\Users\\arizona16\\Documents\\superdevil.jpg");
-	
-		String zipFilePath = "C:\\Users\\arizona16\\Downloads\\test_zipfile_3.zip";
+
+		String zipFilePath = "C:\\Users\\arizona16\\Downloads\\test_zipfile_4.zip";
 		
-		System.out.println(writeAllFilesIntoZipOutputStream(filePathsList, zipFilePath));
+		ZipFileCreator zfc = new ZipFileCreator(filePathsList, zipFilePath);
+	
+		zfc.writeAllFilesIntoZipOutputStream();
+		
+		System.out.println();
 	}
 }
