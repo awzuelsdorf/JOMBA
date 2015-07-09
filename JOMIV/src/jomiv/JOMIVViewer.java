@@ -28,6 +28,8 @@ public class JOMIVViewer {
 
 	public JOMIVViewer() {
 		fileNames = null;
+		saveDirectory = null;
+		saveZipFileName = null;
 	}
 
 	public void viewRootDirs() {
@@ -73,7 +75,7 @@ public class JOMIVViewer {
 		jmFileMenu.add(jmiExitOption);
 
 		//Option to zip up files.
-		JMenuItem jmiTarUp = new JMenuItem("Tar up files");
+		JMenuItem jmiTarUp = new JMenuItem("Back up photos");
 
 		//Will allow user to set save directory and zip file
 		//name, then zip up files.
