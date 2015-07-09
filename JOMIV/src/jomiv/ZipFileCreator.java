@@ -60,7 +60,6 @@ public class ZipFileCreator {
 		} catch (IOException e) {
 			retVal = END_OF_FILE; //Stop reading this file before we
 			//generate more IOExceptions.
-			e.printStackTrace();
 		}
 		
 		return retVal;
@@ -96,7 +95,6 @@ public class ZipFileCreator {
 		try {
 			fis = new FileInputStream(new File(filePath));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 			return false;
 		}
 		
@@ -110,10 +108,8 @@ public class ZipFileCreator {
 			try {
 				fis.close();
 			} catch (IOException e3) {
-				e3.printStackTrace();
 			}
 			
-			e2.printStackTrace();
 			return true;
 		} catch (IOException e1) {
 			//Failed to put new entry into zipfile (NOT because of a
@@ -123,10 +119,8 @@ public class ZipFileCreator {
 			try {
 				fis.close();
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 			
-			e1.printStackTrace();
 			return false;
 		}
 		
@@ -150,10 +144,9 @@ public class ZipFileCreator {
 					try {
 						fis.close();
 					} catch (IOException e1) {
-						e1.printStackTrace();
 					}
 					
-					e.printStackTrace(); //Failed to write. Cannot write file.
+					//Failed to write. Cannot write file.
 					//Return false.
 					return false;
 				}
@@ -163,7 +156,6 @@ public class ZipFileCreator {
 		try {
 			fis.close();
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		
 		return true;
@@ -207,8 +199,6 @@ public class ZipFileCreator {
 			//were supposed to copy.
 			failedFilesList.addAll(filePathsList);
 			
-			e.printStackTrace();
-			
 			return failedFilesList;
 		}
 		
@@ -219,13 +209,8 @@ public class ZipFileCreator {
 		while (fileIter.hasNext()) {
 			fileName = fileIter.next();
 			
-			System.out.printf("Processing %s\n", fileName);
 			if (!writeFileIntoZipOutputStream(fileName, zos, this.bufferSizeInBytes)) {
 				failedFilesList.add(fileName);
-				System.out.printf("Failed on %s!\n", fileName);
-			}
-			else {
-				System.out.printf("Succeeded on %s!\n", fileName);
 			}
 		}
 		
@@ -235,26 +220,8 @@ public class ZipFileCreator {
 			//Could not close zipfile...but succeeded in copying all
 			//files. So just keep going. In a few lines, we will
 			//return empty failedFilesList.
-			e.printStackTrace();
 		}
 		
 		return failedFilesList;
-	}
-	
-	public static void main(String args[]) {
-		LinkedList<String> filePathsList = new LinkedList<String>();
-
-		filePathsList.add("C:\\Users\\arizona16\\Downloads\\ubuntu-15.04-desktop-amd64.iso");
-		filePathsList.add("C:\\Users\\arizona16\\Downloads\\stinkbug.png");
-		filePathsList.add("C:\\Users\\arizona16\\Music\\az-ubuntu-15.04-desktop-amd64.iso");
-		filePathsList.add("C:\\Users\\arizona16\\Documents\\superdevil.jpg");
-
-		String zipFilePath = "C:\\Users\\arizona16\\Downloads\\test_zipfile_4.zip";
-		
-		ZipFileCreator zfc = new ZipFileCreator(filePathsList, zipFilePath);
-	
-		zfc.writeAllFilesIntoZipOutputStream();
-		
-		System.out.println();
 	}
 }
