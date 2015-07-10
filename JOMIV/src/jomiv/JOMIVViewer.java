@@ -1,7 +1,6 @@
 package jomiv;
 
 import java.awt.GraphicsDevice;
-
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,15 +29,6 @@ public class JOMIVViewer {
 		fileNames = null;
 		saveDirectory = null;
 		saveZipFileName = null;
-	}
-
-	public void viewRootDirs() {
-		Iterable<Path> roots =
-				FileSystems.getDefault().getRootDirectories();
-
-		for (Path p : roots) {
-			System.out.println(p);
-		}
 	}
 
 	public int getAllImageFiles() {
@@ -82,7 +72,26 @@ public class JOMIVViewer {
 		jmiTarUp.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				//Get location for zip file.
 				JOMIVViewer.this.setSaveDirectoryAndZipFileName();
+				//Then put zip file in that location.
+				LinkedList<String> rejected = JOMIVViewer.this.zipUpFiles();
+
+				if (rejected != null && rejected.isEmpty()) {
+					JOptionPane.showMessageDialog(null, String.format(
+							"All done backing up your photos! You can find them at %s. Thanks!",
+							saveDirectory + File.separatorChar + saveZipFileName));
+				}
+				else {
+					String msg = "All done backing up your photos! "
+							+ "In your zip file, we had to rename ";
+
+					long i = 0;
+					for (String s : rejected) {
+						msg = msg + i + ") \"" + s + "\" to be \"" + s + "\" ";
+						i += 1;
+					}
+				}
 			}
 		});
 
@@ -158,23 +167,56 @@ public class JOMIVViewer {
 		return fileNames.size();
 	}
 
+	//Because the canWrite() method for the
+	//Java File class often returns false positives
+	//for directories under Windows's file systems.
+	public static boolean canWriteToDirectory(File f) {
+		if (f == null) {
+			throw new IllegalArgumentException("f must not be null!");
+		}
+		else if (f.isDirectory() == false) {
+			throw new IllegalArgumentException(
+					String.format("%s must be a directory, was a file.",
+							f.getAbsolutePath()));
+		}
+		else {
+			//Create a unique file in the directory.
+			String fDir = f.getAbsolutePath() + File.separatorChar;
+			long number = 0;
+
+			while (new File(fDir + number + ".txt").exists()) {
+				number += 1;
+			}
+
+			//And then immediately delete it. If we can do this,
+			//then we can write to the directory. If not, then
+			//we cannot write to the directory.
+			try {
+				new File(fDir + number + ".txt").createNewFile();
+				new File(fDir + number + ".txt").delete();
+				return true;
+			} catch (Exception ex) {
+				return false;
+			}
+		}
+	}
+
 	//Ask user to find directory to save zip
 	//file and choose name for zip file.
 	public void setSaveDirectoryAndZipFileName() {
 		boolean areWeDoneYet = false;
-		
-		JOptionPane.showMessageDialog(null, "This needs more robustness and testing! Do not use except for testing!");
 
 		boolean isFirstIteration = true;
-		
+
+		//Get user to select a directory.
 		while (!areWeDoneYet) {
 
 			//Did the user select a directory previously?
-			boolean needInput = this.saveDirectory == null;
+			areWeDoneYet = this.saveDirectory != null;
 
 			//Yes
-			if (!needInput) {
-				needInput = JOptionPane.YES_OPTION == JOptionPane
+			if (areWeDoneYet) {
+				areWeDoneYet = JOptionPane.YES_OPTION != JOptionPane
 						.showConfirmDialog(null, "You have already selected the folder " +
 								saveDirectory + " to back up your photos in. Click \"yes\""
 								+ " to back up your photos in another folder. Click "
@@ -197,34 +239,54 @@ public class JOMIVViewer {
 			saveDirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
 			//The user must (or wants to) select a directory.
-			if (needInput &&
-					JFileChooser.APPROVE_OPTION != saveDirChooser.showSaveDialog(null)) {
+			//Will only print error message if user does not choose a directory.
+			if (!areWeDoneYet && JFileChooser.APPROVE_OPTION == saveDirChooser.showSaveDialog(null)){
+				//User did not choose a directory.
+				if (saveDirChooser.getSelectedFile() == null) {
+					JOptionPane.showMessageDialog(null, "Sorry!" + 
+							" You must select a folder for your zip " + 
+							"file to go in before JOMIV can back up your photos."
+							, "Oops!", JOptionPane.INFORMATION_MESSAGE);
+				}
+				//User chose a directory
+				else {
+					//Is the directory writable?
+
+					//Yes
+					if (JOMIVViewer.canWriteToDirectory(saveDirChooser.getSelectedFile())) {
+						saveDirectory = saveDirChooser.getSelectedFile().getAbsolutePath();
+						areWeDoneYet = true;
+					}
+					//No
+					else {
+						JOptionPane.showMessageDialog(null,
+								"Sorry! The computer will not let JOMIV create a zip file in that directory. Please choose another one.",
+								"Sorry!", JOptionPane.INFORMATION_MESSAGE);
+					}
+				}
+			}
+			//User did not choose a directory.
+			else {
 				JOptionPane.showMessageDialog(null, "Sorry!" + 
 						" You must select a folder for your zip " + 
 						"file to go in before JOMIV can back up your photos."
 						, "Oops!", JOptionPane.INFORMATION_MESSAGE);
-				return;
 			}
+			isFirstIteration = false;
+		}
 
-			//The user did not select a file.
-			if (saveDirChooser.getSelectedFile() == null) {
-				JOptionPane.showMessageDialog(null, "Sorry!" + 
-						" You must select a folder for your zip " + 
-						"file to go in before JOMIV can back up your photos.",
-						"Oops!", JOptionPane.INFORMATION_MESSAGE);
-				isFirstIteration = true;
-				continue;
-			}
+		areWeDoneYet = false;
+		isFirstIteration = true;
 
-			//Store the selected file's full path.
-			saveDirectory = saveDirChooser.getSelectedFile().getAbsolutePath();
+		//Get zip file name from user.
+		while (!areWeDoneYet) {
 
 			//Did the user previously select a name for the zip file?
-			needInput = saveZipFileName == null;
+			areWeDoneYet = saveZipFileName != null;
 
 			//Yes
-			if (!needInput) {
-				needInput = JOptionPane.YES_OPTION == JOptionPane
+			if (areWeDoneYet) {
+				areWeDoneYet = JOptionPane.YES_OPTION != JOptionPane
 						.showConfirmDialog(null, "You have already selected the name " +
 								this.saveZipFileName + " for a previous zip file. Click \"yes\""
 								+ " to use this same name for this zip file. Click "
@@ -232,53 +294,68 @@ public class JOMIVViewer {
 								JOptionPane.YES_NO_OPTION);
 			}
 			else {
-				this.saveZipFileName = JOptionPane.showInputDialog("Thanks! JOMIV"
-						+ " just needs one"
-						+ " more thing before it can start backing up your files."
-						+ " Please type a name for your zip file in"
-						+ " the box below.");
+				this.saveZipFileName = JOptionPane.showInputDialog(
+						"Please type a name for your zip file in the box below.");
+				isFirstIteration = false;
 			}
 
-			if (this.saveZipFileName == null) {
+			//User did not choose a name.
+			if (saveZipFileName == null || saveZipFileName.compareTo("") == 0) {
 				JOptionPane.showMessageDialog(null, "Sorry!" + 
 						" You must give your zip " + 
 						"file a name before JOMIV can back up your photos.",
 						"Oops!", JOptionPane.INFORMATION_MESSAGE);
-				isFirstIteration = true;
-				continue;
+				areWeDoneYet = false;
+			}
+			else {
+				//We are done...assuming that the user either is
+				//creating a new file or wants to overwrite the old file.
+				areWeDoneYet = true;
 			}
 
-			//Does this file exist?
-			File temp = new File(this.saveDirectory + File.separatorChar +
-					this.saveZipFileName);
+			//User chose a file
+			if (areWeDoneYet) {
+				//Add .zip extension to file name...if file name does not
+				//already have such an extension.
+				if (saveZipFileName.endsWith(".zip") == false) {
+					saveZipFileName += ".zip";
+				}
 
-			//Whether we are done or not depends upon 1) whether the user's
-			//selected zip file exists and 2) whether the user wants to
-			//write over the selected zip file's contents. If the zip file
-			//does not exist, then assume that the user wants to write
-			//over its (nonexistent) contents it.
-			areWeDoneYet = true;
-			
-			if (temp.exists()) {
-				areWeDoneYet = JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(null,
-				"It looks like that file, \"" + temp.getAbsolutePath() +
-				"\", already exists. Do you want to overwrite it?", "Question",
-				JOptionPane.QUESTION_MESSAGE);
+				//Does this file exist?
+				File temp = new File(this.saveDirectory + File.separatorChar +
+						this.saveZipFileName);
+
+				//Whether we are done or not depends upon 1)
+				//whether the user selected a file or not 2) whether the user's
+				//selected zip file exists and 3) whether the user wants to
+				//write over the selected zip file's contents. If the zip file
+				//does not exist, then assume that the user wants to write
+				//over its (nonexistent) contents it.
+				if (areWeDoneYet && temp.exists()) {
+					areWeDoneYet = JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(null,
+							"It looks like that file, \"" + temp.getAbsolutePath() +
+							"\", already exists. Do you want to overwrite it?", "Question",
+							JOptionPane.OK_CANCEL_OPTION);
+					if (areWeDoneYet == false) {
+						//If user does not want to overwrite old file, then set the zip
+						//file name back to null.
+						saveZipFileName = null;
+					}
+				}
 			}
+
+			isFirstIteration = false;
 		}
-		
-		zipUpFiles();
 	}
 
 	//Now that we have dragged a file path out of the user, zip up the files.
-	public void zipUpFiles() {
+	//Return any files that could not be written to the zip file.
+	public LinkedList<String> zipUpFiles() {
 		//File names actually file paths. 
 		ZipFileCreator zfc = new ZipFileCreator(fileNames,
-		saveDirectory + File.separatorChar + saveZipFileName);
+				saveDirectory + File.separatorChar + saveZipFileName);
 
-		LinkedList<String> failedFiles = zfc.writeAllFilesIntoZipOutputStream();
-		
-		System.out.println(failedFiles);
+		return zfc.writeAllFilesIntoZipOutputStream();
 	}
 
 	public void getAllImageFiles(File currentFile,
