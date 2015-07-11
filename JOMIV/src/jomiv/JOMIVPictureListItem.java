@@ -38,13 +38,45 @@ public class JOMIVPictureListItem extends JPanel {
 				throw new IllegalArgumentException(
 						"Nonexistent file path: \"" + filePath + "\".");
 			}
-			
 			this.filePath = new File(filePath).getAbsolutePath();
 		}
 		backup = getNewCheckedCheckBox();
 		viewPictureButton = getNewViewPictureButton();
 		add(backup);
 		add(viewPictureButton);
+	}
+
+	public boolean isSelected() {
+		return backup != null ? backup.isSelected() : false;
+	}
+	
+	public String getFilePath() {
+		return String.format("%s", this.filePath);
+	}
+	
+	public String getFileName() {
+		//Find location of last separatorChar in our file path.
+		int i = filePath.length();
+		
+		while (i > 0 && filePath.charAt(--i) != File.separatorChar);
+
+		//The file path ends in a separator character. So whether
+		//there is a file name is academic. Return null.
+		if (i == filePath.length() - 1) {
+			return null;
+		}
+		//No separator char. The file path *is* the file name.
+		//Return a copy of it.
+		else if (i == 0) {
+			return String.format("%s", filePath);
+		}
+		//The last separator char is somewhere in the file path.
+		//Return the substring from i + 1 (character at i is the
+		//separator. Is not part of the file name) to
+		//filePath.length() - 1
+		else {
+			return filePath.substring(i + 1, filePath.length());
+		}
 	}
 
 	//Returns a check box that is selected by default and whose text
@@ -56,6 +88,24 @@ public class JOMIVPictureListItem extends JPanel {
 		jcb.setToolTipText("Checking this box means that this picture"
 				+ " will be backed up if you choose \"Zip Up Photos\""
 				+ " from the menu above.");
+
+		jcb.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				System.err.println(JOMIVPictureListItem.this.isSelected());
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseExited(MouseEvent e) {}
+			@Override
+			public void mousePressed(MouseEvent e) {}
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+		});
+		
+		
 		return jcb;
 	}
 	

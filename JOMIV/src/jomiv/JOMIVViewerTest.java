@@ -18,6 +18,6 @@ public class JOMIVViewerTest {
 	public void test() {
 		JOMIVViewer viewer = new JOMIVViewer();
 		
-		viewer.getAllImageFiles();
+		viewer.createAndShowGUI();
 	}
 }

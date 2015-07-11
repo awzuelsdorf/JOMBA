@@ -1,5 +1,6 @@
 package jomiv;
 
+import java.awt.Component;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
@@ -24,15 +25,17 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class JOMIVViewer {
 
 	private LinkedList<String> fileNames;
+	private JPanel pictureListItemPanel;
 	private String saveDirectory, saveZipFileName;
 
 	public JOMIVViewer() {
 		fileNames = null;
 		saveDirectory = null;
 		saveZipFileName = null;
+		pictureListItemPanel = null;
 	}
 
-	public int getAllImageFiles() {
+	public int createAndShowGUI() {
 		Iterable<Path> roots =
 				FileSystems.getDefault().getRootDirectories();
 		Iterator<Path> rootDirs = roots.iterator();
@@ -48,8 +51,7 @@ public class JOMIVViewer {
 		JMenuBar jmb = new JMenuBar();
 		JMenu jmFileMenu = new JMenu("File");
 
-		//The obligatory exit button that almost no one over the age of
-		//ten has used since 1997
+		//The obligatory exit button that almost no one has used since 1997
 		JMenuItem jmiExitOption = new JMenuItem("Exit");
 		jmiExitOption.addActionListener(new ActionListener() {
 			@Override
@@ -57,7 +59,6 @@ public class JOMIVViewer {
 				boolean confirmed = JOptionPane.YES_OPTION ==
 						JOptionPane.showConfirmDialog(null,
 								"Are you sure you want to quit?");
-
 				if (confirmed) {
 					imageViewer.dispose();
 				}
@@ -87,14 +88,7 @@ public class JOMIVViewer {
 							saveDirectory + File.separatorChar + saveZipFileName));
 				}
 				else {
-					String msg = "All done backing up your photos! "
-							+ "In your zip file, we had to rename ";
-
-					long i = 0;
-					for (String s : rejected) {
-						msg = msg + i + ") \"" + s + "\" to be \"" + s + "\" ";
-						i += 1;
-					}
+					System.out.println(rejected);
 				}
 			}
 		});
@@ -107,12 +101,12 @@ public class JOMIVViewer {
 		//Put some little "Loading, please wait."
 		//message in JFrame. This message will be replaced with
 		//important stuff later on.
-		JPanel jp = new JPanel();
-		jp.add(new JLabel("Finding your pictures. This may take a"
+		pictureListItemPanel = new JPanel();
+		pictureListItemPanel.add(new JLabel("Finding your pictures. This may take a"
 				+ " few minutes. Please be patient."));
 		imageViewer.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		imageViewer.setTitle("Just One More Image Viewer (JOMIV)");
-		imageViewer.getContentPane().add(jp);
+		imageViewer.getContentPane().add(pictureListItemPanel);
 		imageViewer.pack();
 		imageViewer.setVisible(true);
 
@@ -121,10 +115,10 @@ public class JOMIVViewer {
 		//various Linux distros are the only OSes that are used in the world.
 		String osName = System.getProperty("os.name").toLowerCase();
 
-		boolean isWindows = osName.startsWith("windows");
-		boolean isMac = osName.startsWith("apple");
-		boolean isLinux = osName.startsWith("linux") ||
-				(isWindows == false && isMac == false);
+		boolean isWindows = osName.toLowerCase().startsWith("windows");
+		boolean isLinux = osName.toLowerCase().startsWith("linux");
+		boolean isMac = osName.toLowerCase().startsWith("mac") ||
+				(isWindows == false && isLinux == false);
 
 		while (rootDirs.hasNext()) {
 			rootDirectoryValue = rootDirs.next().toString();
@@ -144,17 +138,17 @@ public class JOMIVViewer {
 		}
 
 		//Get rid of "Please be patient" message.
-		imageViewer.getContentPane().remove(jp);
-		jp = new JPanel();
+		imageViewer.getContentPane().remove(pictureListItemPanel);
+		pictureListItemPanel = new JPanel();
 
 		//Add Picture List
-		jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
-
+		pictureListItemPanel.setLayout(new BoxLayout(pictureListItemPanel, BoxLayout.Y_AXIS));
+		
 		for (String fileName : fileNames) {
-			jp.add(new JOMIVPictureListItem(fileName));
+			pictureListItemPanel.add(new JOMIVPictureListItem(fileName));
 		}
 
-		JScrollPane jsp = new JScrollPane(jp);
+		JScrollPane jsp = new JScrollPane(pictureListItemPanel);
 		imageViewer.getContentPane().add(jsp);
 
 		GraphicsDevice gd = 
@@ -217,9 +211,9 @@ public class JOMIVViewer {
 
 		jfc.setFileFilter(new FileNameExtensionFilter("zip files", "zip"));
 
-		JOptionPane.showMessageDialog(null, "Hi! To export your files"
-				+ " to a zip archive, "
-				+ "just choose a folder, type the name of your zip"
+		JOptionPane.showMessageDialog(null, "Hello! To export your photos"
+				+ " to a zip file, "
+				+ "just choose a folder, choose a name for your zip"
 				+ " file, and press OK.");
 
 		while (!valid) {
@@ -264,14 +258,32 @@ public class JOMIVViewer {
 
 		return true;
 	}
-
+	
+	protected LinkedList<String> getSelectedPhotos() {
+		LinkedList<String> selectedPhotos = new LinkedList<String>();
+	
+		for (Component c : pictureListItemPanel.getComponents()) {
+			if (c instanceof JOMIVPictureListItem) {
+				if (((JOMIVPictureListItem)c).isSelected()) {
+					selectedPhotos.add(((JOMIVPictureListItem)c).getFilePath());
+				}
+			}
+		}
+		
+		return selectedPhotos;
+	}
+	
 	//Now that we have dragged a file path out of the user, zip up the files.
 	//Return any files that could not be written to the zip file.
 	public LinkedList<String> zipUpFiles() {
+		//Determine which photos are still selected in the viewer.
+		//These are the photos we will zip up.
+		LinkedList<String> selectedPhotos = getSelectedPhotos();
+		
 		//File names actually file paths. 
-		ZipFileCreator zfc = new ZipFileCreator(fileNames,
+		ZipFileCreator zfc = new ZipFileCreator(selectedPhotos,
 				saveDirectory + File.separatorChar + saveZipFileName);
-
+		
 		return zfc.writeAllFilesIntoZipOutputStream();
 	}
 
@@ -316,6 +328,6 @@ public class JOMIVViewer {
 
 	public static void main(String args[]) {
 		JOMIVViewer jomivv = new JOMIVViewer();
-		jomivv.getAllImageFiles();
+		jomivv.createAndShowGUI();
 	}
 }

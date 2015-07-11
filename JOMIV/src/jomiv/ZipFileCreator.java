@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -18,6 +19,7 @@ public class ZipFileCreator {
 	private static final int DEFAULT_BUFFER_SIZE_IN_BYTES = 1024;
 	
 	private LinkedList<String> filePathsList;
+	private HashSet<String> entriesSoFar;
 	private String zipFilePath;
 	private int bufferSizeInBytes;
 
@@ -28,15 +30,33 @@ public class ZipFileCreator {
 		if (zipFilePath == null) {
 			throw new IllegalArgumentException("zip file name cannot be null!");
 		}
-		
+	
+		entriesSoFar = new HashSet<String>();
 		this.zipFilePath = zipFilePath;
-		this.filePathsList = new LinkedList<String>();
-		this.filePathsList.addAll(filePaths);
-		this.setBufferSizeInBytes(bufferSizeInBytes);
+		filePathsList = new LinkedList<String>();
+		filePathsList.addAll(filePaths);
+		setBufferSizeInBytes(bufferSizeInBytes);
 	}
 	
 	public ZipFileCreator(List<String> filePaths, String zipFilePath) {
 		this(filePaths, zipFilePath, DEFAULT_BUFFER_SIZE_IN_BYTES);
+	}
+	
+	public String getZipFilePath() {
+		return String.format("%s", zipFilePath);
+	}
+
+	public void setZipFilePath(String filePath) {
+		if (filePath == null) {
+			throw new IllegalArgumentException("null file path not allowed");
+		}
+		else if (!filePath.endsWith(".zip")) {
+			throw new IllegalArgumentException("file path must be for a zip file");
+		}
+		else {
+			this.zipFilePath = String.format("%s", filePath);
+		}
+		
 	}
 	
 	/**
@@ -76,6 +96,7 @@ public class ZipFileCreator {
 	 */
 	protected boolean writeFileIntoZipOutputStream(String filePath,
 			ZipOutputStream zos, int bufferLength) {
+		
 		boolean succeeded = false; //Right now, we have not succeeded in
 		//putting our entry into our zipfile.
 		
@@ -98,19 +119,80 @@ public class ZipFileCreator {
 			return false;
 		}
 		
+		String fname = new File(filePath).getName(); //The name of our new
+		//entry to this file.
+		
 		//Put new entry (the file to be written) into zipfile.
 		try {
-			zos.putNextEntry(new ZipEntry(new File(filePath).getName()));
+			zos.putNextEntry(new ZipEntry(fname));
+			entriesSoFar.add(fname);
 		} catch (ZipException e2) {
 			//Failed to put new entry into zipfile (Probably because of a
-			//duplicate entry). Return true after
-			//attempting to close open resources.
-			try {
-				fis.close();
-			} catch (IOException e3) {
+			//duplicate entry). Create a unique entry name and add that to
+			//the zip file.
+			
+			//Get location of last period in file name.
+			int periodIndex = fname.length(); //Index of last period in file name
+			
+			while (periodIndex > 0 && fname.charAt(--periodIndex) != '.');
+			
+			if (periodIndex == 0) {
+				//The last period in this file is the first character of its name.
+				//Therefore, the file has no extension. Therefore, we can just add
+				//an integer to the end of the file name such that there is no
+				//entry in this zip file that has such a name.
+				long unique = 1;
+				
+				while (entriesSoFar.contains(fname + "(" + unique + ")")) unique += 1;
+				
+				fname = fname + "(" + unique + ")";
+			}
+			else if (periodIndex == fname.length())
+			{
+				//The last period in this file is the last character of its name.
+				//Therefore, we can just add an integer to the end of the file
+				//name such that there is no entry in this zip file that has
+				//such a name.
+				long unique = 1;
+				
+				while (entriesSoFar.contains(fname + "(" + unique + ")")) unique += 1;
+				
+				fname = fname + "(" + unique + ")";
+			}
+			else {
+				//The last period in this file is not the first character of its name.
+				//Also, the last period in this file is not the last character of its name.
+				//Therefore, we can split the string fname into
+				//fname.substring(0, periodIndex) + "(" + <unique_integer> + ")" +
+				//fname.substring(periodIndex + 1, fname.length())
+				long unique = 1;
+				
+				while (entriesSoFar.contains(fname.substring(0, periodIndex) +
+				"(" + unique + ")" + fname.substring(periodIndex, fname.length()))) {
+					unique += 1;
+				}
+				
+				fname = fname.substring(0, periodIndex) +
+				"(" + unique + ")" + fname.substring(periodIndex, fname.length());
 			}
 			
-			return true;
+			//We have our unique entry. Put it in the zip file and our entries set.
+			try {
+				zos.putNextEntry(new ZipEntry(fname));
+				entriesSoFar.add(fname);
+			} catch (IOException e) {
+				//Failed to put new entry into zipfile (NOT because of a
+				//duplicate entry).
+				//Return false after
+				//attempting to close open resources.
+				
+				System.err.println("Failed for " + fname);
+			e.printStackTrace();	
+				try {
+					fis.close();
+				} catch (IOException e1) {}
+				return false;
+			}
 		} catch (IOException e1) {
 			//Failed to put new entry into zipfile (NOT because of a
 			//duplicate entry).
@@ -118,8 +200,7 @@ public class ZipFileCreator {
 			//attempting to close open resources.
 			try {
 				fis.close();
-			} catch (IOException e) {
-			}
+			} catch (IOException e) {}
 			
 			return false;
 		}
@@ -143,8 +224,7 @@ public class ZipFileCreator {
 					//We must exit since we failed to write. Attempt to close open resources.
 					try {
 						fis.close();
-					} catch (IOException e1) {
-					}
+					} catch (IOException e1) {}
 					
 					//Failed to write. Cannot write file.
 					//Return false.
@@ -155,8 +235,7 @@ public class ZipFileCreator {
 	
 		try {
 			fis.close();
-		} catch (IOException e) {
-		}
+		} catch (IOException e) {}
 		
 		return true;
 	}
@@ -209,7 +288,7 @@ public class ZipFileCreator {
 		while (fileIter.hasNext()) {
 			fileName = fileIter.next();
 			
-			if (!writeFileIntoZipOutputStream(fileName, zos, this.bufferSizeInBytes)) {
+			if (!writeFileIntoZipOutputStream(fileName, zos, bufferSizeInBytes)) {
 				failedFilesList.add(fileName);
 			}
 		}
