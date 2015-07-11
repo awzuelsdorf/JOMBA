@@ -1,8 +1,10 @@
-package jomiv;
+
 
 import static org.junit.Assert.*;
 
 import java.util.LinkedList;
+
+import jomiv.ZipFileCreator;
 
 import org.junit.After;
 import org.junit.Before;

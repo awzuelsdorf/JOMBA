@@ -1,4 +1,4 @@
-package jomiv;
+
 
 import static org.junit.Assert.*;
 
@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.LinkedList;
 
 import javax.swing.JOptionPane;
+
+import jomiv.JOMIVPicture;
 
 
 public class JOMIVPictureTest {

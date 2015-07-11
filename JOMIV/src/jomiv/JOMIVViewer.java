@@ -6,10 +6,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.LinkedList;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -22,8 +20,39 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+/*
+Copyright 2015 Andrew Zuelsdorf.
+Licensed under GNU GPL version 3.0.
+
+This file is part of JOMIV
+
+JOMIV is free software:
+you can redistribute it and/or modify it under the terms of the
+GNU General Public License as published by the Free Software 
+Foundation, either version 3 of the License, or (at your option)
+any later version. This program is distributed in the hope that
+it will be useful, but WITHOUT ANY WARRANTY; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.  See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 public class JOMIVViewer {
 
+	private static final int SEPARATION_PIXELS = 10;
+	private static final String JOMIV_URL = "https://www.sourceforge.net/JOMIV";
+	private static final String JOMIV_ABOUT = "JOMIV Copyright 2015 Andrew Zuelsdorf.\n"
+			+ " Licensed under GNU GPL version 3.0. This program is free software:\n"
+			+ " you can redistribute it and/or modify it under the terms of the\n"
+			+ " GNU General Public License as published by the Free Software\n"
+			+ "Foundation, either version 3 of the License, or (at your option)\n"
+			+ " any later version. This program is distributed in the hope that\n"
+			+ " it will be useful, but WITHOUT ANY WARRANTY; without even the\n"
+			+ " implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR\n"
+			+ " PURPOSE.  See the GNU General Public License at\n"
+			+ "http://www.gnu.org/licenses for more information.";
+	
 	private LinkedList<String> fileNames;
 	private JPanel pictureListItemPanel;
 	private String saveDirectory, saveZipFileName;
@@ -36,12 +65,6 @@ public class JOMIVViewer {
 	}
 
 	public int createAndShowGUI() {
-		Iterable<Path> roots =
-				FileSystems.getDefault().getRootDirectories();
-		Iterator<Path> rootDirs = roots.iterator();
-
-		String rootDirectoryValue = null;
-
 		this.fileNames = new LinkedList<String>();
 
 		//Create JFrame and put some. 
@@ -96,46 +119,68 @@ public class JOMIVViewer {
 		jmFileMenu.add(jmiTarUp);
 
 		jmb.add(jmFileMenu);
+		
+		//About bar
+		JMenu jmAboutMenu = new JMenu("Help"); 
+		
+		JMenuItem jmiOnlineHelp = new JMenuItem("Online help");
+		
+		jmiOnlineHelp.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(null,
+				String.format("For help with JOMIV, please visit our website at %s",
+				JOMIV_URL), "JOMIV Help", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+		
+		JMenuItem jmiAbout = new JMenuItem("About");
+		
+		jmiAbout.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(null,
+				String.format("%s",
+				JOMIV_ABOUT), "JOMIV", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+
+		jmAboutMenu.add(jmiOnlineHelp);
+		jmAboutMenu.add(jmiAbout);
+		jmb.add(jmAboutMenu);
+		
 		imageViewer.setJMenuBar(jmb);
 
+		//Terms of Use for user to agree to.
+		int value = JOptionPane.showConfirmDialog(null,
+		"JOMIV Copyright 2015 Andrew Zuelsdorf\n" +
+		"This program comes with ABSOLUTELY NO WARRANTY.\n" +
+		"Licensed under GNU General Public License v3.0\n" +
+		"For more information, visit http://www.gnu.org/licenses.\n" +
+		"By clicking \"Yes\", you agree to the terms in the GNU\n" +
+		"General Public License. Click \"No\" to exit this program.",
+		"Terms of Use", JOptionPane.YES_NO_OPTION);
+
+		//Did user agree to Terms of Use?
+		if (value != JOptionPane.YES_OPTION) {
+			return 0; //The user did not agree
+			//to the terms of use. End this program.
+		}
+		
 		//Put some little "Loading, please wait."
 		//message in JFrame. This message will be replaced with
 		//important stuff later on.
 		pictureListItemPanel = new JPanel();
+		pictureListItemPanel.setLayout(new BoxLayout(pictureListItemPanel, BoxLayout.Y_AXIS));
 		pictureListItemPanel.add(new JLabel("Finding your pictures. This may take a"
 				+ " few minutes. Please be patient."));
-		imageViewer.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		imageViewer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		imageViewer.setTitle("Just One More Image Viewer (JOMIV)");
 		imageViewer.getContentPane().add(pictureListItemPanel);
 		imageViewer.pack();
 		imageViewer.setVisible(true);
 
-		//Determine underlying OS type.
-		//This part assumes that Windows, Mac, and
-		//various Linux distros are the only OSes that are used in the world.
-		String osName = System.getProperty("os.name").toLowerCase();
-
-		boolean isWindows = osName.toLowerCase().startsWith("windows");
-		boolean isLinux = osName.toLowerCase().startsWith("linux");
-		boolean isMac = osName.toLowerCase().startsWith("mac") ||
-				(isWindows == false && isLinux == false);
-
-		while (rootDirs.hasNext()) {
-			rootDirectoryValue = rootDirs.next().toString();
-
-			if (isWindows) {
-				rootDirectoryValue += "Users";
-			}
-			else if (isLinux) {
-				rootDirectoryValue += "home";
-			}
-			else if (isMac) {
-				rootDirectoryValue += "Users";
-			}
-			else {}
-
-			getAllImageFiles(new File(rootDirectoryValue), fileNames);
-		}
+		getAllImageFiles(new File(System.getProperty("user.home")), fileNames);
 
 		//Get rid of "Please be patient" message.
 		imageViewer.getContentPane().remove(pictureListItemPanel);
@@ -143,9 +188,12 @@ public class JOMIVViewer {
 
 		//Add Picture List
 		pictureListItemPanel.setLayout(new BoxLayout(pictureListItemPanel, BoxLayout.Y_AXIS));
-		
+	
 		for (String fileName : fileNames) {
-			pictureListItemPanel.add(new JOMIVPictureListItem(fileName));
+			JOMIVPictureListItem jpli = new JOMIVPictureListItem(fileName);
+			jpli.setBorder(BorderFactory.createEmptyBorder(
+					SEPARATION_PIXELS / 2, 0, SEPARATION_PIXELS / 2, 0));
+			pictureListItemPanel.add(jpli);
 		}
 
 		JScrollPane jsp = new JScrollPane(pictureListItemPanel);
@@ -158,6 +206,15 @@ public class JOMIVViewer {
 		int width = gd.getDisplayMode().getWidth() / 2;
 		int height = gd.getDisplayMode().getHeight() / 2;
 		imageViewer.setSize(width, height);
+		
+		//Tell the user what to do in order to back up their photos.
+		JOptionPane.showMessageDialog(null, "Welcome to JOMIV! Any photos"
+				+ " that have check marks next to them will be backed up.\n"
+				+ "If you don't want to back up a photo, click the check box"
+				+ " next to it. The check mark\nshould disappear when you do this."
+				+ " When you are finished selecting your photos, go to\n"
+				+ " \"File\" and click \"Back up photos\".\n", "Hello!",
+				JOptionPane.INFORMATION_MESSAGE);
 
 		//Return number of images this computer had in
 		//this user's directory.
@@ -204,20 +261,21 @@ public class JOMIVViewer {
 	//Returns true otherwise.
 	public boolean setSaveDirectoryAndZipFileName() {
 		boolean valid = false;
-
 		int retVal;
 
 		JFileChooser jfc = new JFileChooser();
 
-		jfc.setFileFilter(new FileNameExtensionFilter("zip files", "zip"));
+		jfc.setFileFilter(new FileNameExtensionFilter("Zip files (.zip)", "zip"));
 
-		JOptionPane.showMessageDialog(null, "Hello! To export your photos"
-				+ " to a zip file, "
-				+ "just choose a folder, choose a name for your zip"
-				+ " file, and press OK.");
+		JOptionPane.showMessageDialog(null, "Hello again! JOMIV will now back up your photos by"
+				+ " putting them into a zip file\nthat you can keep on your computer, save to a thumb drive,"
+				+ " upload to cloud\nstorage, email to yourself, or email to other people."
+				+ " To create this zip file,\n"
+				+ "just choose a folder, type a name for your zip"
+				+ " file in the text box, and press OK.", "Back Up Photos",
+				JOptionPane.INFORMATION_MESSAGE);
 
 		while (!valid) {
-
 			retVal = jfc.showSaveDialog(null);
 
 			switch (retVal) {
@@ -244,15 +302,12 @@ public class JOMIVViewer {
 				}
 				catch (NullPointerException ex) {
 					JOptionPane.showMessageDialog(null, "Sorry! JOMIV cannot create"
-							+ " a zip archive there. Please choose another place.",
+							+ " a zip archive there. Please choose another folder.",
 							"Sorry!", JOptionPane.INFORMATION_MESSAGE);
 				}
 				break;
 			default:
-				JOptionPane.showMessageDialog(null, "Sorry! JOMIV had an "
-						+ "unexpected problem. Please try again.",
-						"Sorry!", JOptionPane.INFORMATION_MESSAGE);
-				break;
+				return false;
 			}
 		}
 

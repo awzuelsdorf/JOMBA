@@ -1,4 +1,6 @@
-package jomiv;
+
+
+import jomiv.JOMIVViewer;
 
 import org.junit.After;
 import org.junit.Before;
