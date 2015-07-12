@@ -1,12 +1,12 @@
-package jomiv;
+package jomba;
 
 /*
 Copyright 2015 Andrew Zuelsdorf.
 Licensed under GNU GPL version 3.0.
 
-This file is part of JOMIV
+This file is part of JOMBA
 
-JOMIV is free software:
+JOMBA is free software:
 you can redistribute it and/or modify it under the terms of the
 GNU General Public License as published by the Free Software 
 Foundation, either version 3 of the License, or (at your option)
@@ -34,14 +34,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-public class JOMIVPictureListItem extends JPanel {
+public class JOMBAPictureListItem extends JPanel {
 
 	private static final long serialVersionUID = 5805157205657888477L;
 	private String filePath;
 	private JCheckBox backup;
 	private JButton viewPictureButton;
 	
-	public JOMIVPictureListItem(String filePath) {
+	public JOMBAPictureListItem(String filePath) {
 		super();
 		
 		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -127,7 +127,7 @@ public class JOMIVPictureListItem extends JPanel {
 
 				try {
 					imageIcon = new ImageIcon(
-							JOMIVPictureListItem.this.filePath);
+							JOMBAPictureListItem.this.filePath);
 				
 					jl = new JLabel(imageIcon);
 					jsp = new JScrollPane(jl);
@@ -135,7 +135,7 @@ public class JOMIVPictureListItem extends JPanel {
 					//Create window to show picture in.
 					JFrame imageBrowser = new JFrame();
 					imageBrowser.getContentPane().add(jsp);
-					imageBrowser.setTitle(JOMIVPictureListItem.this.filePath);
+					imageBrowser.setTitle(JOMBAPictureListItem.this.filePath);
 					imageBrowser.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 					
 					//Do not pack or else bottom scroll bar will be hidden

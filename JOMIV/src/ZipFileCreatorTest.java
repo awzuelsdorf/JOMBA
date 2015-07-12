@@ -1,11 +1,6 @@
-
-
 import static org.junit.Assert.*;
-
 import java.util.LinkedList;
-
-import jomiv.ZipFileCreator;
-
+import jomba.ZipFileCreator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

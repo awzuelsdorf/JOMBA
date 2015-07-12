@@ -1,4 +1,4 @@
-package jomiv;
+package jomba;
 
 import java.awt.Component;
 import java.awt.GraphicsDevice;
@@ -24,9 +24,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 Copyright 2015 Andrew Zuelsdorf.
 Licensed under GNU GPL version 3.0.
 
-This file is part of JOMIV
+This file is part of JOMBA
 
-JOMIV is free software:
+JOMBA is free software:
 you can redistribute it and/or modify it under the terms of the
 GNU General Public License as published by the Free Software 
 Foundation, either version 3 of the License, or (at your option)
@@ -38,11 +38,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-public class JOMIVViewer {
+public class JOMBAViewer {
 
 	private static final int SEPARATION_PIXELS = 10;
-	private static final String JOMIV_URL = "https://www.sourceforge.net/p/jomiv";
-	private static final String JOMIV_ABOUT = "JOMIV Copyright 2015 Andrew Zuelsdorf.\n"
+	private static final String imageFileExtensions[] = {".png", ".jpg", ".svg", ".gif"};
+	private static final String JOMBA_URL = "https://www.sourceforge.net/p/jomba";
+	private static final String JOMBA_ABOUT = "JOMBA Copyright 2015 Andrew Zuelsdorf.\n"
 			+ " Licensed under GNU GPL version 3.0. This program is free software:\n"
 			+ " you can redistribute it and/or modify it under the terms of the\n"
 			+ " GNU General Public License as published by the Free Software\n"
@@ -57,7 +58,7 @@ public class JOMIVViewer {
 	private JPanel pictureListItemPanel;
 	private String saveDirectory, saveZipFileName;
 
-	public JOMIVViewer() {
+	public JOMBAViewer() {
 		fileNames = null;
 		saveDirectory = null;
 		saveZipFileName = null;
@@ -87,7 +88,6 @@ public class JOMIVViewer {
 				}
 			}
 		});
-		jmFileMenu.add(jmiExitOption);
 
 		//Option to zip up files.
 		JMenuItem jmiTarUp = new JMenuItem("Back up photos");
@@ -98,7 +98,7 @@ public class JOMIVViewer {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//Get location for zip file. Return if none provided.
-				if (!JOMIVViewer.this.setSaveDirectoryAndZipFileName()) {
+				if (!JOMBAViewer.this.setSaveDirectoryAndZipFileName()) {
 					return;
 				}
 
@@ -118,7 +118,7 @@ public class JOMIVViewer {
 				}
 				
 				//Then put zip file in that location.
-				LinkedList<String> rejected = JOMIVViewer.this.zipUpFiles();
+				LinkedList<String> rejected = JOMBAViewer.this.zipUpFiles();
 			
 				if (rejected == null || rejected.isEmpty()) {
 					JOptionPane.showMessageDialog(null, String.format(
@@ -138,13 +138,14 @@ public class JOMIVViewer {
 				}
 				
 				JOptionPane.showMessageDialog(null,
-				"Thanks for using JOMIV! At this time, you may close this program.",
+				"Thanks for using JOMBA! At this time, you may close this program.",
 				"Thanks!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 
 		jmFileMenu.add(jmiTarUp);
-
+		jmFileMenu.add(jmiExitOption);
+		
 		jmb.add(jmFileMenu);
 		
 		//About bar
@@ -156,8 +157,8 @@ public class JOMIVViewer {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(null,
-				String.format("For help with JOMIV, please visit our website at %s",
-				JOMIV_URL), "JOMIV Help", JOptionPane.INFORMATION_MESSAGE);
+				String.format("For help with JOMBA, please visit our website at %s",
+				JOMBA_URL), "JOMBA Help", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		
@@ -168,7 +169,7 @@ public class JOMIVViewer {
 			public void actionPerformed(ActionEvent e) {
 				JOptionPane.showMessageDialog(null,
 				String.format("%s",
-				JOMIV_ABOUT), "JOMIV", JOptionPane.INFORMATION_MESSAGE);
+				JOMBA_ABOUT), "JOMBA", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 
@@ -180,7 +181,7 @@ public class JOMIVViewer {
 
 		//Terms of Use for user to agree to.
 		int value = JOptionPane.showConfirmDialog(null,
-		"JOMIV Copyright 2015 Andrew Zuelsdorf\n" +
+		"JOMBA Copyright 2015 Andrew Zuelsdorf\n" +
 		"This program comes with ABSOLUTELY NO WARRANTY.\n" +
 		"Licensed under GNU General Public License v3.0\n" +
 		"For more information, visit http://www.gnu.org/licenses.\n" +
@@ -202,7 +203,7 @@ public class JOMIVViewer {
 		pictureListItemPanel.add(new JLabel("Finding your pictures. This may take a"
 				+ " few minutes. Please be patient."));
 		imageViewer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		imageViewer.setTitle("Just One More Image Viewer (JOMIV)");
+		imageViewer.setTitle("Just One More Backup Application (JOMBA)");
 		imageViewer.getContentPane().add(pictureListItemPanel);
 		imageViewer.pack();
 		imageViewer.setVisible(true);
@@ -217,7 +218,7 @@ public class JOMIVViewer {
 		pictureListItemPanel.setLayout(new BoxLayout(pictureListItemPanel, BoxLayout.Y_AXIS));
 	
 		for (String fileName : fileNames) {
-			JOMIVPictureListItem jpli = new JOMIVPictureListItem(fileName);
+			JOMBAPictureListItem jpli = new JOMBAPictureListItem(fileName);
 			jpli.setBorder(BorderFactory.createEmptyBorder(
 					SEPARATION_PIXELS / 2, 0, SEPARATION_PIXELS / 2, 0));
 			pictureListItemPanel.add(jpli);
@@ -235,7 +236,7 @@ public class JOMIVViewer {
 		imageViewer.setSize(width, height);
 		
 		//Tell the user what to do in order to back up their photos.
-		JOptionPane.showMessageDialog(null, "Welcome to JOMIV! Any photos"
+		JOptionPane.showMessageDialog(null, "Welcome to JOMBA! Any photos"
 				+ " that have check marks next to them will be backed up.\n"
 				+ "If you don't want to back up a photo, click the check box"
 				+ " next to it. The check mark\nshould disappear when you do this."
@@ -294,7 +295,7 @@ public class JOMIVViewer {
 
 		jfc.setFileFilter(new FileNameExtensionFilter("Zip files (.zip)", "zip"));
 
-		JOptionPane.showMessageDialog(null, "Hello again! JOMIV will now back up your photos by"
+		JOptionPane.showMessageDialog(null, "Hello again! JOMBA will now back up your photos by"
 				+ " putting them into a zip file\nthat you can keep on your computer, save to a thumb drive,"
 				+ " upload to cloud\nstorage, email to yourself, or email to other people."
 				+ " To create this zip file,\n"
@@ -317,8 +318,8 @@ public class JOMIVViewer {
 						saveZipFileName += ".zip";
 					}
 
-					if (!JOMIVViewer.canWriteToDirectory(jfc.getSelectedFile().getParentFile())) {
-						JOptionPane.showMessageDialog(null, "Sorry! JOMIV"
+					if (!JOMBAViewer.canWriteToDirectory(jfc.getSelectedFile().getParentFile())) {
+						JOptionPane.showMessageDialog(null, "Sorry! JOMBA"
 								+ " cannot create a zip archive there. Please"
 								+ " choose another place.", "Sorry!",
 								JOptionPane.INFORMATION_MESSAGE);
@@ -341,7 +342,7 @@ public class JOMIVViewer {
 					}
 				}
 				catch (NullPointerException ex) {
-					JOptionPane.showMessageDialog(null, "Sorry! JOMIV cannot create"
+					JOptionPane.showMessageDialog(null, "Sorry! JOMBA cannot create"
 							+ " a zip archive there. Please choose another folder.",
 							"Sorry!", JOptionPane.INFORMATION_MESSAGE);
 				}
@@ -358,9 +359,9 @@ public class JOMIVViewer {
 		LinkedList<String> selectedPhotos = new LinkedList<String>();
 	
 		for (Component c : pictureListItemPanel.getComponents()) {
-			if (c instanceof JOMIVPictureListItem) {
-				if (((JOMIVPictureListItem)c).isSelected()) {
-					selectedPhotos.add(((JOMIVPictureListItem)c).getFilePath());
+			if (c instanceof JOMBAPictureListItem) {
+				if (((JOMBAPictureListItem)c).isSelected()) {
+					selectedPhotos.add(((JOMBAPictureListItem)c).getFilePath());
 				}
 			}
 		}
@@ -407,7 +408,7 @@ public class JOMIVViewer {
 				}
 			}
 			else if (currentFile.isFile() &&
-					JOMIVPicture.hasImageFileExtension(
+					hasImageFileExtension(
 							currentFile.getAbsolutePath())) {
 				fileNames.add(currentFile.getAbsolutePath());
 			}
@@ -421,8 +422,22 @@ public class JOMIVViewer {
 		}
 	}
 
+	public static boolean hasImageFileExtension(String filePath) {
+		if (filePath == null) {
+			return false;
+		}
+		
+		for (int i = 0; i < imageFileExtensions.length; i += 1) {
+			if (filePath.endsWith(imageFileExtensions[i])) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 	public static void main(String args[]) {
-		JOMIVViewer jomivv = new JOMIVViewer();
+		JOMBAViewer jomivv = new JOMBAViewer();
 		jomivv.createAndShowGUI();
 	}
 }

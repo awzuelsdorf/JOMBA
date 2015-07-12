@@ -10,7 +10,7 @@ public class JOMBAAllTestsRunner {
 
 		System.err.println(
 				String.format(
-						"Number of failures in JOMIVViewerTest: %d",
+						"Number of failures in JOMBAViewerTest: %d",
 						r.getFailureCount()));
 
 		for (Failure f : r.getFailures()) {
