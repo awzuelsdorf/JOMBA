@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 public class JOMIVViewer {
 
 	private static final int SEPARATION_PIXELS = 10;
-	private static final String JOMIV_URL = "https://www.sourceforge.net/JOMIV";
+	private static final String JOMIV_URL = "https://www.sourceforge.net/p/jomiv";
 	private static final String JOMIV_ABOUT = "JOMIV Copyright 2015 Andrew Zuelsdorf.\n"
 			+ " Licensed under GNU GPL version 3.0. This program is free software:\n"
 			+ " you can redistribute it and/or modify it under the terms of the\n"
@@ -104,15 +104,27 @@ public class JOMIVViewer {
 
 				//Then put zip file in that location.
 				LinkedList<String> rejected = JOMIVViewer.this.zipUpFiles();
-
-				if (rejected != null && rejected.isEmpty()) {
+			
+				if (rejected == null || rejected.isEmpty()) {
 					JOptionPane.showMessageDialog(null, String.format(
-							"All done backing up your photos! You can find them at %s. Thanks!",
-							saveDirectory + File.separatorChar + saveZipFileName));
+					"All done backing up your photos! You can find them at %s",
+					saveDirectory + File.separatorChar + saveZipFileName));
 				}
-				else {
-					System.out.println(rejected);
+				else if (rejected != null) {
+					String rejectedFilePaths = "";
+					
+					for (String filePath : rejected) {
+						rejectedFilePaths = rejectedFilePaths + "\n" + filePath;
+					}
+					
+					JOptionPane.showMessageDialog(null, String.format(
+					"Sorry! The following photos could not be backed up: %s\nThe rest of your photos are at %s",
+					rejectedFilePaths, saveDirectory + File.separatorChar + saveZipFileName));
 				}
+				
+				JOptionPane.showMessageDialog(null,
+				"Thanks for using JOMIV! At this time, you may close this program.",
+				"Thanks!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 
@@ -295,6 +307,19 @@ public class JOMIVViewer {
 								+ " cannot create a zip archive there. Please"
 								+ " choose another place.", "Sorry!",
 								JOptionPane.INFORMATION_MESSAGE);
+					}
+					else if (new File(saveDirectory +
+							File.separatorChar + saveZipFileName).exists()) {
+						
+						int retVal2 = JOptionPane.showConfirmDialog(null,
+						"\"" + saveZipFileName + "\" already exists.\n"
+						+ "Backing up there will get rid of any information in that file.\n"
+						+ "Do you want to do that?",
+						"Are you sure?", JOptionPane.YES_NO_OPTION);
+					
+						if (retVal2 == JOptionPane.YES_OPTION) {
+							valid = true;
+						}
 					}
 					else {
 						valid = true;
