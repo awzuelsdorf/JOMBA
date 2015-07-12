@@ -1,12 +1,12 @@
 
 
-import jomiv.JOMIVViewer;
+import jomiv.JOMBAViewer;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class JOMIVViewerTest {
+public class JOMBAViewerTest {
 
 	@Before
 	public void setUp() throws Exception {
@@ -18,7 +18,7 @@ public class JOMIVViewerTest {
 
 	@Test
 	public void test() {
-		JOMIVViewer viewer = new JOMIVViewer();
+		JOMBAViewer viewer = new JOMBAViewer();
 		
 		viewer.createAndShowGUI();
 	}
