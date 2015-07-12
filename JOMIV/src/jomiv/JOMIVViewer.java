@@ -102,6 +102,21 @@ public class JOMIVViewer {
 					return;
 				}
 
+				//Let user know her time commitment and offer her
+				//the chance to quit before she backs up her photos.
+				switch (JOptionPane.showConfirmDialog(null,
+				"Backing up your photos may take several minutes.\n" +
+				"to complete. Click OK to begin. Click cancel to\n" +
+				"end backup.", "Please be patient",
+				JOptionPane.OK_CANCEL_OPTION)) {
+				
+				case JOptionPane.OK_OPTION:
+					break;
+				case JOptionPane.CANCEL_OPTION:
+				default:
+					return;
+				}
+				
 				//Then put zip file in that location.
 				LinkedList<String> rejected = JOMIVViewer.this.zipUpFiles();
 			
