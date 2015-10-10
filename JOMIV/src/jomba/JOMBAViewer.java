@@ -46,7 +46,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 public class JOMBAViewer {
 
 	private static final int SEPARATION_PIXELS = 10;
-	private static final String imageFileExtensions[] = {".png", ".jpg", ".svg", ".gif"};
 	private static final String JOMBA_URL = "https://www.sourceforge.net/p/jomba";
 	private static final String JOMBA_ABOUT = "JOMBA Copyright 2015 Andrew Zuelsdorf.\n"
 			+ " Licensed under GNU GPL version 3.0. This program is free software:\n"
@@ -59,6 +58,7 @@ public class JOMBAViewer {
 			+ " PURPOSE.  See the GNU General Public License at\n"
 			+ "http://www.gnu.org/licenses for more information.";
 
+	private String validFileExtensions[];
 	private LinkedList<String> fileNames;
 	private JPanel pictureListItemPanel;
 	private String saveDirectory, saveZipFileName;
@@ -122,6 +122,14 @@ public class JOMBAViewer {
 			return true;
 		}
 	}
+	
+	public String[] getValidFileExtensions() {
+		String csv = JOptionPane.showInputDialog(null, "Which files do you want to back up? PDFs, Word documents, photos? Please enter their extensions as a comma-separated list (Example: .pdf,.docx,.jpg", "File extensions", JOptionPane.INFORMATION_MESSAGE);
+		if (csv == null) {
+			return null;
+		}
+		return csv.replaceAll("\\s+", "").split(",");
+	}
 
 	public int createAndShowGUI() {
 		this.fileNames = new LinkedList<String>();
@@ -148,7 +156,7 @@ public class JOMBAViewer {
 		});
 
 		//Option to zip up files.
-		JMenuItem jmiTarUp = new JMenuItem("Back up photos");
+		JMenuItem jmiTarUp = new JMenuItem("Back up files");
 
 		//Will allow user to set save directory and zip file
 		//name, then zip up files.
@@ -161,9 +169,9 @@ public class JOMBAViewer {
 				}
 
 				//Let user know her time commitment and offer her
-				//the chance to quit before she backs up her photos.
+				//the chance to quit before she backs up her files.
 				switch (JOptionPane.showConfirmDialog(null,
-						"Backing up your photos may take several minutes.\n" +
+						"Backing up your files may take several minutes.\n" +
 								"to complete. Click OK to begin. Click cancel to\n" +
 								"end backup.", "Please be patient",
 								JOptionPane.OK_CANCEL_OPTION)) {
@@ -180,7 +188,7 @@ public class JOMBAViewer {
 
 				if (rejected == null || rejected.isEmpty()) {
 					JOptionPane.showMessageDialog(null, String.format(
-							"All done backing up your photos! You can find them at %s",
+							"All done backing up your files! You can find them at %s",
 							saveDirectory + File.separatorChar + saveZipFileName));
 				}
 				else if (rejected != null) {
@@ -191,7 +199,7 @@ public class JOMBAViewer {
 					}
 
 					JOptionPane.showMessageDialog(null, String.format(
-							"Sorry! The following photos could not be backed up: %s\nThe rest of your photos are at %s",
+							"Sorry! The following files could not be backed up: %s\nThe rest of your files are at %s",
 							rejectedFilePaths, saveDirectory + File.separatorChar + saveZipFileName));
 				}
 
@@ -252,7 +260,24 @@ public class JOMBAViewer {
 			return 0; //The user did not agree
 			//to the terms of use. End this program.
 		}
-
+	
+		do {
+			//Figure out which file types that user wants to back up.
+			validFileExtensions = this.getValidFileExtensions();
+			
+			if (validFileExtensions == null) {
+				int retVal = JOptionPane.showConfirmDialog(null, "You did not enter any file extensions.\n"
+						+ "JOMBA can only back up your files if you enter file extensions.\n"
+						+ "Do you want to try again?", "Whoops!", JOptionPane.YES_NO_OPTION);
+				if (retVal == JOptionPane.NO_OPTION) {
+					JOptionPane.showMessageDialog(null,
+						"Thanks for using JOMBA! At this time, you may close this program.",
+						"Thanks!", JOptionPane.INFORMATION_MESSAGE);
+					imageViewer.dispose();
+				}
+			}
+		} while (validFileExtensions == null);
+		
 		//Put some little "Loading, please wait."
 		//message in JFrame. This message will be replaced with
 		//important stuff later on.
@@ -268,14 +293,6 @@ public class JOMBAViewer {
 
 		getAllImageFiles(new File(System.getProperty("user.home")), fileNames);
 
-		LinkedList<String> duplicateFileNames = new LinkedList<String>();
-
-		try {
-			this.getDuplicateFiles(fileNames, duplicateFileNames);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-
 		//Get rid of "Please be patient" message.
 		imageViewer.getContentPane().remove(pictureListItemPanel);
 		pictureListItemPanel = new JPanel();
@@ -284,7 +301,7 @@ public class JOMBAViewer {
 		pictureListItemPanel.setLayout(new BoxLayout(pictureListItemPanel, BoxLayout.Y_AXIS));
 
 		for (String fileName : fileNames) {
-			JOMBAPictureListItem jpli = new JOMBAPictureListItem(fileName);
+			JOMBAFileListItem jpli = new JOMBAFileListItem(fileName);
 			jpli.setBorder(BorderFactory.createEmptyBorder(
 					SEPARATION_PIXELS / 2, 0, SEPARATION_PIXELS / 2, 0));
 			pictureListItemPanel.add(jpli);
@@ -301,13 +318,13 @@ public class JOMBAViewer {
 		int height = gd.getDisplayMode().getHeight() / 2;
 		imageViewer.setSize(width, height);
 
-		//Tell the user what to do in order to back up their photos.
-		JOptionPane.showMessageDialog(null, "Welcome to JOMBA! Any photos"
+		//Tell the user what to do in order to back up their files.
+		JOptionPane.showMessageDialog(null, "Welcome to JOMBA! Any files"
 				+ " that have check marks next to them will be backed up.\n"
-				+ "If you don't want to back up a photo, click the check box"
+				+ "If you don't want to back up a file, click the check box"
 				+ " next to it. The check mark\nshould disappear when you do this."
-				+ " When you are finished selecting your photos, go to\n"
-				+ " \"File\" and click \"Back up photos\".\n", "Hello!",
+				+ " When you are finished selecting your files, go to\n"
+				+ " \"File\" and click \"Back up files\".\n", "Hello!",
 				JOptionPane.INFORMATION_MESSAGE);
 
 		//Return number of images this computer had in
@@ -361,12 +378,12 @@ public class JOMBAViewer {
 
 		jfc.setFileFilter(new FileNameExtensionFilter("Zip files (.zip)", "zip"));
 
-		JOptionPane.showMessageDialog(null, "Hello again! JOMBA will now back up your photos by"
+		JOptionPane.showMessageDialog(null, "Hello again! JOMBA will now back up your files by"
 				+ " putting them into a zip file\nthat you can keep on your computer, save to a thumb drive,"
 				+ " upload to cloud\nstorage, email to yourself, or email to other people."
 				+ " To create this zip file,\n"
 				+ "just choose a folder, type a name for your zip"
-				+ " file in the text box, and press OK.", "Back Up Photos",
+				+ " file in the text box, and press OK.", "Back Up Files",
 				JOptionPane.INFORMATION_MESSAGE);
 
 		while (!valid) {
@@ -421,29 +438,29 @@ public class JOMBAViewer {
 		return true;
 	}
 
-	protected LinkedList<String> getSelectedPhotos() {
-		LinkedList<String> selectedPhotos = new LinkedList<String>();
+	protected LinkedList<String> getSelectedFiles() {
+		LinkedList<String> selectedFiles = new LinkedList<String>();
 
 		for (Component c : pictureListItemPanel.getComponents()) {
-			if (c instanceof JOMBAPictureListItem) {
-				if (((JOMBAPictureListItem)c).isSelected()) {
-					selectedPhotos.add(((JOMBAPictureListItem)c).getFilePath());
+			if (c instanceof JOMBAFileListItem) {
+				if (((JOMBAFileListItem)c).isSelected()) {
+					selectedFiles.add(((JOMBAFileListItem)c).getFilePath());
 				}
 			}
 		}
 
-		return selectedPhotos;
+		return selectedFiles;
 	}
 
 	//Now that we have dragged a file path out of the user, zip up the files.
 	//Return any files that could not be written to the zip file.
 	public LinkedList<String> zipUpFiles() {
-		//Determine which photos are still selected in the viewer.
-		//These are the photos we will zip up.
-		LinkedList<String> selectedPhotos = getSelectedPhotos();
+		//Determine which files are still selected in the viewer.
+		//These are the files we will zip up.
+		LinkedList<String> selectedFiles = getSelectedFiles();
 
 		//File names actually file paths. 
-		ZipFileCreator zfc = new ZipFileCreator(selectedPhotos,
+		ZipFileCreator zfc = new ZipFileCreator(selectedFiles,
 				saveDirectory + File.separatorChar + saveZipFileName);
 
 		return zfc.writeAllFilesIntoZipOutputStream();
@@ -474,7 +491,7 @@ public class JOMBAViewer {
 				}
 			}
 			else if (currentFile.isFile() &&
-					hasImageFileExtension(
+					hasValidFileExtension(
 							currentFile.getAbsolutePath())) {
 				fileNames.add(currentFile.getAbsolutePath());
 			}
@@ -488,13 +505,13 @@ public class JOMBAViewer {
 		}
 	}
 
-	public static boolean hasImageFileExtension(String filePath) {
+	public boolean hasValidFileExtension(String filePath) {
 		if (filePath == null) {
 			return false;
 		}
 
-		for (int i = 0; i < imageFileExtensions.length; i += 1) {
-			if (filePath.endsWith(imageFileExtensions[i])) {
+		for (int i = 0; i < validFileExtensions.length; i += 1) {
+			if (filePath.endsWith(validFileExtensions[i])) {
 				return true;
 			}
 		}

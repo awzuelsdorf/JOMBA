@@ -2,6 +2,7 @@ package jomba;
 
 /*
 Copyright 2015 Andrew Zuelsdorf.
+
 Licensed under GNU GPL version 3.0.
 
 This file is part of JOMBA
@@ -34,14 +35,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-public class JOMBAPictureListItem extends JPanel {
+public class JOMBAFileListItem extends JPanel {
 
+	private static String validImageFileExtensions[] = {".png", ".jpg", ".gif"};
 	private static final long serialVersionUID = 5805157205657888477L;
 	private String filePath;
 	private JCheckBox backup;
 	private JButton viewPictureButton;
 	
-	public JOMBAPictureListItem(String filePath) {
+	public JOMBAFileListItem(String filePath) {
 		super();
 		
 		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -109,8 +111,27 @@ public class JOMBAPictureListItem extends JPanel {
 		return jcb;
 	}
 	
+	//Yes, I realize this is not a foolproof way of
+	//determining if a file is an image.
+	//However,...reasons.
+	public boolean isImageFile() {
+		for (final String fileExt : validImageFileExtensions) {
+			if (filePath.endsWith(fileExt)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private JButton getNewViewPictureButton() {
 		JButton viewPictureButton = new JButton("View Picture");
+	
+		if (!isImageFile()) {
+			viewPictureButton.setText("No Preview Available");
+			viewPictureButton.setToolTipText("No preview available for this"
+					+ " file type.");
+			return viewPictureButton;
+		}
 		
 		viewPictureButton.setToolTipText("See this picture in another window");
 		
@@ -127,7 +148,7 @@ public class JOMBAPictureListItem extends JPanel {
 
 				try {
 					imageIcon = new ImageIcon(
-							JOMBAPictureListItem.this.filePath);
+							JOMBAFileListItem.this.filePath);
 				
 					jl = new JLabel(imageIcon);
 					jsp = new JScrollPane(jl);
@@ -135,7 +156,7 @@ public class JOMBAPictureListItem extends JPanel {
 					//Create window to show picture in.
 					JFrame imageBrowser = new JFrame();
 					imageBrowser.getContentPane().add(jsp);
-					imageBrowser.setTitle(JOMBAPictureListItem.this.filePath);
+					imageBrowser.setTitle(JOMBAFileListItem.this.filePath);
 					imageBrowser.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 					
 					//Do not pack or else bottom scroll bar will be hidden
@@ -168,7 +189,9 @@ public class JOMBAPictureListItem extends JPanel {
 			@Override
 			public void mouseReleased(MouseEvent e) {}
 		});
-		
+	
+		viewPictureButton.setEnabled(true);
+	
 		return viewPictureButton; 
 	}
 }

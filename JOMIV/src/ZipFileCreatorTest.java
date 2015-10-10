@@ -15,14 +15,23 @@ public class ZipFileCreatorTest {
 	public void tearDown() throws Exception {
 	}
 
+	public static boolean printAllFiles(LinkedList<String> files) {
+		if (files == null) return true;
+		
+		System.out.println("Failed files:");
+		
+		for (final String s: files) {
+			System.out.println(s);
+		}
+		
+		return false;
+	}
+	
 	@Test
 	public void zipFileCreatorTest() {
 		LinkedList<String> filePathsList = new LinkedList<String>();
 
-		filePathsList.add("C:\\Users\\arizona16\\Downloads\\ubuntu-15.04-desktop-amd64.iso");
-		filePathsList.add("C:\\Users\\arizona16\\Downloads\\stinkbug.png");
-		filePathsList.add("C:\\Users\\arizona16\\Music\\az-ubuntu-15.04-desktop-amd64.iso");
-		filePathsList.add("C:\\Users\\arizona16\\Documents\\superdevil.jpg");
+		filePathsList.add("C:\\Users\\arizona16\\Downloads\\225practiceexam1solutions.pdf");
 
 		String zipFilePath = "C:\\Users\\arizona16\\Downloads\\test_zipfile_4.zip";
 		
@@ -31,7 +40,7 @@ public class ZipFileCreatorTest {
 		LinkedList<String> returnValue = zfc.writeAllFilesIntoZipOutputStream();
 		
 		assertFalse(returnValue == null);
-		assertTrue(returnValue.isEmpty());
+		assertTrue(returnValue.isEmpty() || printAllFiles(returnValue));
 		
 		System.out.println();
 
